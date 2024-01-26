@@ -51,8 +51,8 @@ punishmentLogs = ""
 
 
 TWITCH_CHANNEL_NAME = "its_bbananabread"
-CLIENT_ID = f"{process.getenv("TWITCH_KEY")}"
-CHANNEL_ID = f"{process.getenv("OAUTH_ID")}"
+CLIENT_ID = process.getenv("TWITCH_KEY")
+CHANNEL_ID = process.getenv("OAUTH_ID")
 
 async def check_twitch():
     url = f"https://api.twitch.tv/helix/streams?user_login={TWITCH_CHANNEL_NAME}"

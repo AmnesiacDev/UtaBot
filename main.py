@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 color_class = [Color.blue(), Color.red(), Color.green(), Color.magenta(), Color.dark_magenta(), Color.dark_grey(),
                Color.dark_green(), Color.dark_gold(), Color.orange(), Color.purple()]
 conf = {
-  "apiKey": f"{process.getenv("FIREKEY")}",
+  "apiKey": process.getenv("FIREKEY"),
   "authDomain": "thebread-2.firebaseapp.com",
   "databaseURL": "https://thebread-2-default-rtdb.firebaseio.com/",
   "projectId": "thebread-2",

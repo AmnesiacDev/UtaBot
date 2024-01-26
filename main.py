@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 color_class = [Color.blue(), Color.red(), Color.green(), Color.magenta(), Color.dark_magenta(), Color.dark_grey(),
                Color.dark_green(), Color.dark_gold(), Color.orange(), Color.purple()]
 conf = {
-  "apiKey": f"{process.environ.FIREKEY}",
+  "apiKey": f"{process.getenv("FIREKEY")}",
   "authDomain": "thebread-2.firebaseapp.com",
   "databaseURL": "https://thebread-2-default-rtdb.firebaseio.com/",
   "projectId": "thebread-2",
@@ -51,8 +51,8 @@ punishmentLogs = ""
 
 
 TWITCH_CHANNEL_NAME = "its_bbananabread"
-CLIENT_ID = f"{process.environ.TWITCH_KEY}"
-CHANNEL_ID = f"{process.environ.OAUTH_ID}"
+CLIENT_ID = f"{process.getenv("TWITCH_KEY")}"
+CHANNEL_ID = f"{process.getenv("OAUTH_ID")}"
 
 async def check_twitch():
     url = f"https://api.twitch.tv/helix/streams?user_login={TWITCH_CHANNEL_NAME}"
@@ -385,4 +385,4 @@ async def on_member_remove(member):
                 await channel.send(f'{member.mention}', embed=embed)
 
 
-bot.run(process.environ.TOKEN)
+bot.run(process.getenv("TOKEN"))

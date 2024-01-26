@@ -1,6 +1,7 @@
 import datetime, pyrebase
 import humanfriendly
 import nextcord, math
+import os as process
 from nextcord.ext import commands
 import requests
 import Tickets, EmbedCreator, Logs

@@ -1,4 +1,4 @@
-import datetime, pyrebase, config
+import datetime, pyrebase
 import humanfriendly
 import nextcord, math
 from nextcord.ext import commands

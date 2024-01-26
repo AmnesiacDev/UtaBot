@@ -1,5 +1,5 @@
-nextcord==2.6.0
-nextcord.ext.menus==1.5.7
-pyrebase4==4.7.1
+nextcord
+nextcord.ext.menus
+pyrebase4
 humanfriendly
 requests

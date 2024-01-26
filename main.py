@@ -14,7 +14,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 color_class = [Color.blue(), Color.red(), Color.green(), Color.magenta(), Color.dark_magenta(), Color.dark_grey(),
                Color.dark_green(), Color.dark_gold(), Color.orange(), Color.purple()]
 conf = {
-  "apiKey": "AIzaSyB58KL2jN6ABvd4K_uu9xU2bJAMcGGQUiw",
+  "apiKey": f"{process.env.FIREKEY}",
   "authDomain": "thebread-2.firebaseapp.com",
   "databaseURL": "https://thebread-2-default-rtdb.firebaseio.com/",
   "projectId": "thebread-2",
@@ -50,8 +50,8 @@ punishmentLogs = ""
 
 
 TWITCH_CHANNEL_NAME = "its_bbananabread"
-CLIENT_ID = "wulmh9v3jhdwgnlf53qisql36m62dg"
-CHANNEL_ID = "boub7atx4rbdbstn8klrufp6ovz2qa"
+CLIENT_ID = f"{process.env.TWITCH_KEY}"
+CHANNEL_ID = f"{OAUTH_ID}"
 
 async def check_twitch():
     url = f"https://api.twitch.tv/helix/streams?user_login={TWITCH_CHANNEL_NAME}"

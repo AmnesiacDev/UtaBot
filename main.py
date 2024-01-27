@@ -298,9 +298,11 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
     if type == 0:
         users = db.child("Users").order_by_child("level").limit_to_last(10).get().val()
         levelType = "level"
+        emoji = "📔"
     else:
         users = db.child("Users").order_by_child("vlevel").limit_to_last(10).get().val()
         levelType = "vlevel"
+        emoji = "🔊"
     stackKey = []
     for key, val in users.items():
         stackKey.append(key)
@@ -317,7 +319,7 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
 
         bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
 
-    embed = EmbedCreator.createEmbed(color_class[3], "Leaderboard", bodyStr, "", "", "")
+    embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard {emoji}", bodyStr, "", "", "")
     await interaction.response.send_message(embed=embed)
 
 

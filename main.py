@@ -238,6 +238,7 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         finalUser = user.replace("<", "").replace(">", "").replace("@", "")
     finalUser = db.child("Users").child(finalUser).get().val()
     if type == 0:
+        emoji = "📔"
         for key, val in finalUser.items():
             if key == "exp":
                 exp = val
@@ -246,10 +247,11 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         nextLevel = round((4 * (level ** 3)) / 5)
         imgToUse = math.floor((exp / nextLevel) * 100)
         imgToUse = int(math.floor(imgToUse / 15))
-        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+        embed = EmbedCreator.createEmbed(color_class[1], f"Stats{emoji}",
                                          f"Current Level: {level}\nCurrent Experience {exp}/{nextLevel}",
                                          imgList[imgToUse], "", "")
     else:
+        emoji = "🔊"
         for key, val in finalUser.items():
             if key == "vexp":
                 vexp = val
@@ -258,7 +260,7 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         nextLevel = round((4 * (vlevel ** 3)) / 5)
         imgToUse = math.floor((vexp / nextLevel)*100)
         imgToUse = int(math.floor(imgToUse/15))
-        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+        embed = EmbedCreator.createEmbed(color_class[1], f"Stats{emoji}",
                                          f"Current Level: {vlevel}\nCurrent Experience {vexp}/{nextLevel}",
                                          imgList[imgToUse], "", "")
 

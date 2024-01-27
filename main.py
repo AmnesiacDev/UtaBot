@@ -310,6 +310,7 @@ async def twitch_check():
     try:
         id = data["data"][0]["id"]
     except:
+        print("Stream is offline")
     global stream_id, twitchPingsChannel, TWITCH_CHANNEL_NAME, twitchPingImage
 
     if data != 0 and int(id) != stream_id:

@@ -1,17 +1,17 @@
-import datetime, pyrebase
+import datetime, pyrebase, config
 import humanfriendly
 import nextcord, math
-import os as process
 from nextcord.ext import commands
 import requests
+import os as process
 import Tickets, EmbedCreator, Logs
 from nextcord.ext import tasks
-from nextcord import Intents, Color, Interaction, SlashOption
+from nextcord import Intents, Color, Interaction, SlashOption, ButtonStyle
+from nextcord.ui import View, Button
 
 intents = Intents.all()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
-
 color_class = [Color.blue(), Color.red(), Color.green(), Color.magenta(), Color.dark_magenta(), Color.dark_grey(),
                Color.dark_green(), Color.dark_gold(), Color.orange(), Color.purple()]
 conf = {
@@ -39,7 +39,7 @@ print(db.child("Users").get().val())
 
 endTicketImage = ""
 roleName = ""
-twitchPingImage = ""
+twitchPingImage = "https://media.discordapp.net/attachments/1200255898589872168/1200630104599036035/New_Project_3.png?ex=65c6e0eb&is=65b46beb&hm=dc866c53fbc9a6322847e13036bce238dd18896a4ca69535d4900cb3871e3e43&=&format=webp&quality=lossless"
 
 welcomeImage = ""
 welcomeMessage = ""
@@ -48,11 +48,16 @@ welcomeChannel = ""
 
 messageLogs = ""
 punishmentLogs = ""
-
-
+twitchPingsChannel = 1179968880450478130
+twitchPingRole = 1180322120853626921
 TWITCH_CHANNEL_NAME = "its_bbananabread"
 CLIENT_ID = process.getenv("TWITCH_KEY")
 CHANNEL_ID = process.getenv("OAUTH_ID")
+stream_id = 0
+
+levelRole = [1200305361303908372, 1200305442740502548, 1200305503507587153, 1200305561313488947,
+             1200639506127265804, 1200639591879811212, 1200639626650595438, 1200639671672242196,
+             1200639708095586326, 1200639747538833579]
 
 async def check_twitch():
     url = f"https://api.twitch.tv/helix/streams?user_login={TWITCH_CHANNEL_NAME}"
@@ -60,10 +65,12 @@ async def check_twitch():
         "Client-ID": CLIENT_ID,
         "Authorization": f"Bearer {CHANNEL_ID}"  # Replace with your new OAuth token
     }
-
+    global stream_id
     response = requests.get(url, headers=headers)
     data = response.json()
+
     if "data" in data and data["data"]:
+
         return data
     else:
         return 0
@@ -304,10 +311,27 @@ async def on_ready():
     print("....................................")
 
 
-@tasks.loop(seconds=1.0)
+@tasks.loop(minutes=5.0)
 async def twitch_check():
-    if await check_twitch() != 0:
-        print("pog")
+    data = await check_twitch()
+    id = data["data"][0]["id"]
+    global stream_id, twitchPingsChannel, TWITCH_CHANNEL_NAME, twitchPingImage
+
+    if data != 0 and int(id) != stream_id:
+        stream_id = int(id)
+        guild = await bot.fetch_guild(serverId)
+        channel = await guild.fetch_channel(twitchPingsChannel)
+
+        linkButton = Button(label="Come watch my stream", url="https://www.twitch.tv/its_bbananabread", style=ButtonStyle.blurple)
+        async def linkButton_callback(interaction):
+            await interaction.response.send_message("works")
+
+        linkButton.callback = linkButton_callback
+        myView = View()
+        myView.add_item(linkButton)
+        embed = EmbedCreator.createEmbed(color_class[3], f"[LIVE]{data['data'][0]['user_name']}",
+                                         f"{data['data'][0]['title']}", twitchPingImage,"",f"{data['data'][0]['game_name']}")
+        await channel.send(embed=embed, view=myView, content=f"Hey guys, I'm live please check out my stream :) {guild.get_role(1180322120853626921).mention}")
     else:
         print("dog")
 
@@ -322,7 +346,7 @@ twitch_check.start()
 async def on_message(msg):
     await check_twitch()
     if not msg.author.bot:
-        global levelChannel
+        global levelChannel, levelRole
         user = db.child("Users").child(msg.author.id).get().val()
         for key, val in user.items():
             if key == "exp":
@@ -336,6 +360,36 @@ async def on_message(msg):
             exp = 0
             level += 1
             await msg.guild.get_channel(levelChannel).send(f"Congratulations {msg.author.mention} You are now Level {level}")
+        if level == 5:
+            role = msg.guild.get_role(levelRole[0])
+            await msg.author.add_roles(role)
+        elif level == 10:
+            role = msg.guild.get_role(levelRole[1])
+            await msg.author.add_roles(role)
+        elif level == 15:
+            role = msg.guild.get_role(levelRole[2])
+            await msg.author.add_roles(role)
+        elif level == 20:
+            role = msg.guild.get_role(levelRole[3])
+            await msg.author.add_roles(role)
+        elif level == 25:
+            role = msg.guild.get_role(levelRole[4])
+            await msg.author.add_roles(role)
+        elif level == 30:
+            role = msg.guild.get_role(levelRole[5])
+            await msg.author.add_roles(role)
+        elif level == 40:
+            role = msg.guild.get_role(levelRole[6])
+            await msg.author.add_roles(role)
+        elif level == 50:
+            role = msg.guild.get_role(levelRole[7])
+            await msg.author.add_roles(role)
+        elif level == 75:
+            role = msg.guild.get_role(levelRole[8])
+            await msg.author.add_roles(role)
+        elif level == 100:
+            role = msg.guild.get_role(levelRole[9])
+            await msg.author.add_roles(role)
         db.child("Users").child(msg.author.id).update({"exp": exp, "level": level})
 
 
@@ -370,19 +424,6 @@ async def on_member_join(member):
         await channel.send(f'{member.mention}', embed=embed)
 
 
-
-@bot.event
-async def on_member_remove(member):
-    if not member.bot:
-        global goodbyeChannel, goodbyeImage, goodbyeMessage
-        embed = EmbedCreator.createEmbed(Color.magenta(), f'User {member.name.mention} has left', goodbyeMessage,
-                                         goodbyeImage, "", "")
-        for i in member.guild.channels:
-
-            if i.id == int(goodbyeChannel):
-                print("in if")
-                channel = i
-                await channel.send(f'{member.mention}', embed=embed)
 
 
 bot.run(process.getenv("TOKEN"))

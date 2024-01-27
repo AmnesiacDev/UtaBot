@@ -1,4 +1,5 @@
 import datetime, pyrebase
+from datetime import datetime as dt
 import humanfriendly
 import nextcord, math
 from nextcord.ext import commands
@@ -417,10 +418,41 @@ async def on_member_join(member):
         embed = EmbedCreator.createEmbed(Color.magenta(), f'Welcome to {member.guild.name}', welcomeMessage,
                                          welcomeImage, "", "")
         channel = member.guild.get_channel(welcomeChannel)
-        db.child("Users").child(member.id).update({{"exp": 0, "level": 1, "mod": 0, "vexp": 0}})
+        db.child("Users").child(member.id).update(
+            {{"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"}})
         await channel.send(f'{member.mention}', embed=embed)
 
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if before.channel is None:
+        print(f"user {member} joined {after.channel}")
+        now = dt.now()
+        db.child("Users").child(member.id).update({"vTime": str(now)})
 
+    elif after.channel is None:
+        current_time = dt.now()
+        user = db.child("Users").child(member.id).get().val()
+        for key, val in user.items():
+            if key == "vTime":
+                joinTime = dt.strptime(val, '%Y-%m-%d %H:%M:%S.%f')
+            if key == "vexp":
+                vexp = val
+            if key == "vlevel":
+                vlevel = val
 
+        time_diff = current_time - joinTime
+        exp = int(math.ceil(int(time_diff.total_seconds()) / 3))
+
+        nextLevel = round((4 * (vlevel ** 2.5)) / 5)
+        if vexp + exp >= nextLevel:
+            difference = nextLevel - vexp
+            exp -= difference
+            vexp = exp
+            vlevel += 1
+        else:
+            vexp += exp
+
+        db.child("Users").child(member.id).update({"vexp": vexp, "vlevel": vlevel, "vTime": "now"})
+        print(f"user {member} left {before.channel}")
 
 bot.run(process.getenv("TOKEN"))

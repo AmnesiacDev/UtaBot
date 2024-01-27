@@ -383,6 +383,7 @@ async def on_message(msg):
                 f"Congratulations {msg.author.mention} You are now Level {level}")
         if level == 5:
             role = msg.guild.get_role(levelRole[0])
+            print(msg.author.get_role(role))
             if msg.author.get_role(role) is None:
                 await msg.author.add_roles(role)
         elif level == 10:

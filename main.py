@@ -210,7 +210,8 @@ async def mute(interaction: Interaction, user_id: str, reason: str, mute_duratio
 
             if i.id == finalID.id:
                 await i.edit(timeout=nextcord.utils.utcnow() + datetime.timedelta(seconds=time))
-                await interaction.response.send_message(f'User {i.name} has been muted for {time}')
+                await interaction.response.send_message(f'User {i.name} has been muted for {reason}. Duration {time}')
+
     else:
         await interaction.response.send_message("You do not have permission to use this command")
 
@@ -230,23 +231,37 @@ async def unmute(interaction: Interaction, user_id: str):
 
 
 @bot.slash_command(guild_ids=[serverId])
-async def level(interaction: Interaction, user: str = ""):
+async def level(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1}), user: str = ""):
     global imgList
     finalUser = interaction.user.id
     if user:
         finalUser = user.replace("<", "").replace(">", "").replace("@", "")
     finalUser = db.child("Users").child(finalUser).get().val()
+    if type == 0:
+        for key, val in finalUser.items():
+            if key == "exp":
+                exp = val
+            if key == "level":
+                level = val
+        nextLevel = round((4 * (level ** 3)) / 5)
+        imgToUse = math.floor((exp / nextLevel) * 100)
+        imgToUse = int(math.floor(imgToUse / 15))
+        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+                                         f"Current Level: {level}\nCurrent Experience {exp}/{nextLevel}",
+                                         imgList[imgToUse], "", "")
+    else:
+        for key, val in finalUser.items():
+            if key == "vexp":
+                vexp = val
+            if key == "vlevel":
+                vlevel = val
+        nextLevel = round((4 * (vlevel ** 3)) / 5)
+        imgToUse = math.floor((vexp / nextLevel)*100)
+        imgToUse = int(math.floor(imgToUse/15))
+        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+                                         f"Current Level: {vlevel}\nCurrent Experience {vexp}/{nextLevel}",
+                                         imgList[imgToUse], "", "")
 
-    for key, val in finalUser.items():
-        if key == "exp":
-            exp = val
-        if key == "level":
-            level = val
-    nextLevel = round((4 * (level ** 3)) / 5)
-    imgToUse = math.floor(exp/nextLevel)
-    embed = EmbedCreator.createEmbed(color_class[1], "Stats",
-                                     f"Current Level: {level}\nCurrent Experience {exp}/{nextLevel}",
-                                     imgList[imgToUse], "", "")
     await interaction.response.send_message(embed=embed)
 
 
@@ -276,9 +291,16 @@ async def unmod(interaction: Interaction, user_id: str):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
+
 @bot.slash_command(guild_ids=[serverId])
-async def leaderboard(interaction: Interaction):
-    users = db.child("Users").order_by_child("level").limit_to_last(10).get().val()
+async def leaderboard(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1})):
+
+    if type == 0:
+        users = db.child("Users").order_by_child("level").limit_to_last(10).get().val()
+        levelType = "level"
+    else:
+        users = db.child("Users").order_by_child("vlevel").limit_to_last(10).get().val()
+        levelType = "vlevel"
     stackKey = []
     for key, val in users.items():
         stackKey.append(key)
@@ -289,13 +311,13 @@ async def leaderboard(interaction: Interaction):
         myVal = db.child("Users").child(userId).get().val()
         v = ""
         for key, val in myVal.items():
-            if key == "level":
+            if key == levelType:
                 v = val
         user = await interaction.client.fetch_user(userId)
 
-        bodyStr += f"{str(i+1)}- {user.name} - Level: {v}\n"
+        bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
 
-    embed = EmbedCreator.createEmbed(color_class[3], "Leaderboard", bodyStr,"","","")
+    embed = EmbedCreator.createEmbed(color_class[3], "Leaderboard", bodyStr, "", "", "")
     await interaction.response.send_message(embed=embed)
 
 
@@ -339,6 +361,7 @@ async def after_slow_count():
 
 
 twitch_check.start()
+
 @bot.event
 async def on_message(msg):
     await check_twitch()
@@ -351,42 +374,53 @@ async def on_message(msg):
             if key == "level":
                 level = val
 
-        exp +=1
+        exp += 1
         nextLevel = round((4 * (level ** 3)) / 5)
         if exp >= nextLevel:
             exp = 0
             level += 1
-            await msg.guild.get_channel(levelChannel).send(f"Congratulations {msg.author.mention} You are now Level {level}")
+            await msg.guild.get_channel(levelChannel).send(
+                f"Congratulations {msg.author.mention} You are now Level {level}")
         if level == 5:
             role = msg.guild.get_role(levelRole[0])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 10:
             role = msg.guild.get_role(levelRole[1])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 15:
             role = msg.guild.get_role(levelRole[2])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 20:
             role = msg.guild.get_role(levelRole[3])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 25:
             role = msg.guild.get_role(levelRole[4])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 30:
             role = msg.guild.get_role(levelRole[5])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 40:
             role = msg.guild.get_role(levelRole[6])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 50:
             role = msg.guild.get_role(levelRole[7])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 75:
             role = msg.guild.get_role(levelRole[8])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         elif level == 100:
             role = msg.guild.get_role(levelRole[9])
-            await msg.author.add_roles(role)
+            if msg.author.get_role(role) is None:
+                await msg.author.add_roles(role)
         db.child("Users").child(msg.author.id).update({"exp": exp, "level": level})
 
 

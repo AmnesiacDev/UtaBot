@@ -247,9 +247,9 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         nextLevel = round((4 * (level ** 3)) / 5)
         imgToUse = math.floor((exp / nextLevel) * 100)
         imgToUse = int(math.floor(imgToUse / 15))
-        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+        embed = EmbedCreator.createEmbed(color_class[1], f"Stats   -   {emoji}",
                                          f"Current Level: {level}\nCurrent Experience {exp}/{nextLevel}",
-                                         imgList[imgToUse], emoji, "")
+                                         imgList[imgToUse], "", "")
     else:
         emoji = "🔊"
         for key, val in finalUser.items():
@@ -260,9 +260,9 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         nextLevel = round((4 * (vlevel ** 3)) / 5)
         imgToUse = math.floor((vexp / nextLevel)*100)
         imgToUse = int(math.floor(imgToUse/15))
-        embed = EmbedCreator.createEmbed(color_class[1], "Stats",
+        embed = EmbedCreator.createEmbed(color_class[1], f"Stats   -   {emoji}",
                                          f"Current Level: {vlevel}\nCurrent Experience {vexp}/{nextLevel}",
-                                         imgList[imgToUse], emoji, "")
+                                         imgList[imgToUse], "", "")
 
     await interaction.response.send_message(embed=embed)
 
@@ -321,7 +321,7 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
 
         bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
 
-    embed = EmbedCreator.createEmbed(color_class[3], "Leaderboard", bodyStr, "", emoji, "")
+    embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard   -   {emoji}", bodyStr, "", "", "")
     await interaction.response.send_message(embed=embed)
 
 

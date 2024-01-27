@@ -482,6 +482,9 @@ async def on_voice_state_update(member, before, after):
             exp -= difference
             vexp = exp
             vlevel += 1
+            global levelChannel
+            channel = member.guild.get_channel(levelChannel)
+            channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
         else:
             vexp += exp
 

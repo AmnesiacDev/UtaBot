@@ -103,7 +103,7 @@ async def test(interaction: Interaction):
 async def bot_config(interaction: Interaction, message_logs: str = "",
                      punishment_logs: str = "", end_ticket_image: str = "", twitch_ping_image: str = ""):
     global creatorId
-    if interaction.user.id == interaction.guild.owner_id or interaction.user.id == creatorId:
+    if interaction.user.id in creatorId:
         global endTicketImage, messageLogs, punishmentLogs, twitchPingImage
 
         if twitch_ping_image:
@@ -132,23 +132,16 @@ async def create_ticket(interaction: Interaction,
                         thumbnail: str = "", footer: str = ""):
     global roleName
     global creatorId
-    for i in interaction.guild.roles:
-        if i.name == roleName or interaction.user.id == interaction.guild.owner_id or interaction.user.id == creatorId:
-            ender = False
-            if i in interaction.user.roles or interaction.user.id == interaction.guild.owner_id:
+    if interaction.user.id in creatorId:
+        colorFinal = color_class[color]
 
-                colorFinal = color_class[color]
+        body = body.replace("%n", f'\n')
+        ticket = Tickets.CreateTicketMenu()
+        ticket.createEmbed(colorFinal, title, body, image, thumbnail, footer)
 
-                body = body.replace("%n", f'\n')
-                ticket = Tickets.CreateTicketMenu()
-                ticket.createEmbed(colorFinal, title, body, image, thumbnail, footer)
+        await ticket.start(interaction=interaction)
 
-                await ticket.start(interaction=interaction)
-
-            else:
-                await interaction.response.send_message("No permission")
-            break
-    if ender:
+    else:
         await interaction.response.send_message("No permission")
 
 
@@ -314,7 +307,9 @@ async def on_ready():
 @tasks.loop(minutes=5.0)
 async def twitch_check():
     data = await check_twitch()
-    id = data["data"][0]["id"]
+    try:
+        id = data["data"][0]["id"]
+    except:
     global stream_id, twitchPingsChannel, TWITCH_CHANNEL_NAME, twitchPingImage
 
     if data != 0 and int(id) != stream_id:
@@ -405,7 +400,7 @@ async def on_message_delete(msg):
 
 @bot.event
 async def on_message_edit(before, after):
-    if not before.author.bot and before.lower() != after.lower():
+    if not before.author.bot and before.content.lower() != after.content.lower():
         global messageLogs
         for i in before.guild.channels:
             if i.id == int(messageLogs):

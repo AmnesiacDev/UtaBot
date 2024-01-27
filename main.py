@@ -417,6 +417,7 @@ async def on_member_join(member):
         embed = EmbedCreator.createEmbed(Color.magenta(), f'Welcome to {member.guild.name}', welcomeMessage,
                                          welcomeImage, "", "")
         channel = member.guild.get_channel(welcomeChannel)
+        db.child("Users").child(member.id).update({{"exp": 0, "level": 1, "mod": 0, "vexp": 0}})
         await channel.send(f'{member.mention}', embed=embed)
 
 

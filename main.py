@@ -12,7 +12,7 @@ from nextcord.ui import View, Button
 
 intents = Intents.all()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+
 color_class = [Color.blue(), Color.red(), Color.green(), Color.magenta(), Color.dark_magenta(), Color.dark_grey(),
                Color.dark_green(), Color.dark_gold(), Color.orange(), Color.purple()]
 conf = {
@@ -54,6 +54,16 @@ levelRole = [1200305361303908372, 1200305442740502548, 1200305503507587153, 1200
              1200639506127265804, 1200639591879811212, 1200639626650595438, 1200639671672242196,
              1200639708095586326, 1200639747538833579]
 
+
+servers = db.child("Guild").get().val()
+serverIdList = []
+for id in servers:
+    serverIdList.append(int(id))
+
+serverId = tuple(serverIdList)
+
+bot = commands.Bot(command_prefix='!', intents=intents, default_guild_ids=serverId)
+
 async def check_twitch():
     url = f"https://api.twitch.tv/helix/streams?user_login={TWITCH_CHANNEL_NAME}"
     headers = {
@@ -77,7 +87,7 @@ levelChannel = 1200293742322655353
 modRole = 1187465633462489119
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def welcome_channel(interaction: Interaction, welcome_message: str, welcome_channel: str, welcome_image: str):
     if interaction.user.id in creatorId:
 
@@ -91,13 +101,10 @@ async def welcome_channel(interaction: Interaction, welcome_message: str, welcom
 
 
 
-@bot.slash_command(guild_ids=[serverId])
-async def test(interaction: Interaction):
-    model = Tickets.EndReason()
-    await interaction.response.send_modal(model)
 
 
-@bot.slash_command(guild_ids=[serverId])
+
+@bot.slash_command()
 async def bot_config(interaction: Interaction, message_logs: str = "",
                      punishment_logs: str = "", end_ticket_image: str = "", twitch_ping_image: str = ""):
     global creatorId
@@ -123,7 +130,7 @@ async def bot_config(interaction: Interaction, message_logs: str = "",
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def create_ticket(interaction: Interaction,
                         color: int = SlashOption(name="color", choices={"Blue": 0, "Red": 1, "Green": 2, "Pink": 3,
                                                                         "Magenta": 4, "Gray": 5, "Dark green": 6,
@@ -145,7 +152,7 @@ async def create_ticket(interaction: Interaction,
         await interaction.response.send_message("No permission")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def create_embed(interaction: Interaction,
                        color: int = SlashOption(name="color", choices={"Blue": 0, "Red": 1, "Green": 2, "Pink": 3,
                                                                        "Magenta": 4, "Gray": 5, "Dark green": 6,
@@ -167,7 +174,7 @@ async def create_embed(interaction: Interaction,
 
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def ban(interaction: Interaction, user_id: str, reason: str):
 
     caller = db.child("Users").child(interaction.user.id).get().val()
@@ -194,7 +201,7 @@ async def ban(interaction: Interaction, user_id: str, reason: str):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def unban(interaction: Interaction, user_id: str, reason: str = ""):
     caller = db.child("Users").child(interaction.user.id).get().val()
     for key, val in caller.items():
@@ -217,7 +224,7 @@ async def unban(interaction: Interaction, user_id: str, reason: str = ""):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def kick(interaction: Interaction, user_id: str, reason: str):
     caller = db.child("Users").child(interaction.user.id).get().val()
     for key, val in caller.items():
@@ -243,7 +250,7 @@ async def kick(interaction: Interaction, user_id: str, reason: str):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def mute(interaction: Interaction, user_id: str, reason: str, mute_duration: str = "12h"):
     caller = db.child("Users").child(interaction.user.id).get().val()
     for key, val in caller.items():
@@ -273,7 +280,7 @@ async def mute(interaction: Interaction, user_id: str, reason: str, mute_duratio
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def unmute(interaction: Interaction, user_id: str, reason: str = ""):
     caller = db.child("Users").child(interaction.user.id).get().val()
     for key, val in caller.items():
@@ -302,7 +309,7 @@ async def unmute(interaction: Interaction, user_id: str, reason: str = ""):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def level(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1}), user: str = ""):
     global imgList
     finalUser = interaction.user.id
@@ -339,7 +346,7 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
     await interaction.response.send_message(embed=embed)
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def mod(interaction: Interaction, user_id: str):
     global creatorId, modRole
     if interaction.user.id in creatorId:
@@ -352,7 +359,7 @@ async def mod(interaction: Interaction, user_id: str):
         await interaction.response.send_message("You do not have permission to use this command")
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def unmod(interaction: Interaction, user_id: str):
     global creatorId, modRole
     if interaction.user.id in creatorId:
@@ -366,7 +373,7 @@ async def unmod(interaction: Interaction, user_id: str):
 
 
 
-@bot.slash_command(guild_ids=[serverId])
+@bot.slash_command()
 async def leaderboard(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1})):
 
     if type == 0:

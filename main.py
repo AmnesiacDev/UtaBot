@@ -42,9 +42,7 @@ endTicketImage = ""
 roleName = ""
 twitchPingImage = "https://media.discordapp.net/attachments/1200255898589872168/1200630104599036035/New_Project_3.png?ex=65c6e0eb&is=65b46beb&hm=dc866c53fbc9a6322847e13036bce238dd18896a4ca69535d4900cb3871e3e43&=&format=webp&quality=lossless"
 
-welcomeImage = ""
-welcomeMessage = ""
-welcomeChannel = ""
+
 
 
 messageLogs = ""
@@ -85,13 +83,16 @@ modRole = 1187465633462489119
 
 @bot.slash_command(guild_ids=[serverId])
 async def welcome_channel(interaction: Interaction, welcome_message: str, welcome_channel: str, welcome_image: str):
-    global welcomeChannel, welcomeImage, welcomeMessage
     if interaction.user.id in creatorId:
-        welcomeMessage, welcomeImage = welcome_message, welcome_image
-        welcomeChannel = welcome_channel.replace("#", "").replace("<", "").replace(">", "")
+
+        welcomeCh = int(welcome_channel.replace("#", "").replace("<", "").replace(">", ""))
+        db.child("Guild").child(interaction.guild.id).update({"welcome_ch": welcomeCh,
+                                                              "welcome_mess": welcome_message,
+                                                              "welcome_img": welcome_image})
         await interaction.response.send_message("Updated successfully")
     else:
         await interaction.response.send_message("You do not have permission to use this command")
+
 
 
 @bot.slash_command(guild_ids=[serverId])
@@ -447,18 +448,24 @@ async def on_message_edit(before, after):
         msg = (before, after)
         await channel.send(embed=Logs.message_log(1, msg))
 
-
 @bot.event
 async def on_member_join(member):
     if not member.bot:
-        global welcomeChannel, welcomeImage, welcomeMessage
+        server = db.child("Guild").child(member.guild.id).get().val()
+        for key, val in server.items():
+            if key == "welcome_ch":
+                welcomeChannel = val
+            elif key == "welcome_mess":
+                welcomeMessage = val
+            elif key == "welcome_img":
+                welcomeImage = val
         embed = EmbedCreator.createEmbed(Color.magenta(), f'Welcome to {member.guild.name}', welcomeMessage,
                                          welcomeImage, "", "")
-        channel = member.guild.get_channel(int(welcomeChannel))
+
+        channel = member.guild.get_channel(welcomeChannel)
         db.child("Users").child(member.id).update(
             {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
         await channel.send(f'{member.mention}', embed=embed)
-
 @bot.event
 async def on_voice_state_update(member, before, after):
     if before.channel is None:

@@ -169,62 +169,135 @@ async def create_embed(interaction: Interaction,
 
 @bot.slash_command(guild_ids=[serverId])
 async def ban(interaction: Interaction, user_id: str, reason: str):
-    if interaction.user.id in creatorId:
+
+    caller = db.child("Users").child(interaction.user.id).get().val()
+    for key, val in caller.items():
+        if key == "mod":
+            isMod = val
+
+    if interaction.user.id in creatorId or isMod:
         finalID = await interaction.client.fetch_user(user_id)
+
+        server = db.child("Guild").child(interaction.guild.id).get().val()
+        for key, val in server.items():
+            if key == "log_pun":
+                punishmentLogs = val
+        channel = interaction.guild.get_channel(int(punishmentLogs))
         await interaction.guild.ban(finalID, delete_message_seconds=None, delete_message_days=7,
                                     reason=reason)
         await interaction.response.send_message(f'User {finalID.name} has been banned for {reason}')
+        embed = Logs.punishment_log(2, finalID, reason, "")
+        await channel.send(embed = embed)
+
+
     else:
         await interaction.response.send_message("You do not have permission to use this command")
 
 
 @bot.slash_command(guild_ids=[serverId])
-async def unban(interaction: Interaction, user_id: str):
-    if interaction.user.id in creatorId:
+async def unban(interaction: Interaction, user_id: str, reason: str = ""):
+    caller = db.child("Users").child(interaction.user.id).get().val()
+    for key, val in caller.items():
+        if key == "mod":
+            isMod = val
+    if interaction.user.id in creatorId or isMod:
         finalID = await interaction.client.fetch_user(user_id)
+        server = db.child("Guild").child(interaction.guild.id).get().val()
+
+        for key, val in server.items():
+            if key == "log_pun":
+                punishmentLogs = val
+        channel = interaction.guild.get_channel(int(punishmentLogs))
+
         await interaction.guild.unban(finalID)
         await interaction.response.send_message(f'User {finalID.name} has been un-banned')
+        embed = Logs.punishment_log(3, finalID, reason, "")
+        await channel.send(embed=embed)
     else:
         await interaction.response.send_message("You do not have permission to use this command")
-
 
 
 @bot.slash_command(guild_ids=[serverId])
 async def kick(interaction: Interaction, user_id: str, reason: str):
-    if interaction.user.id in creatorId:
+    caller = db.child("Users").child(interaction.user.id).get().val()
+    for key, val in caller.items():
+        if key == "mod":
+            isMod = val
+
+    if interaction.user.id in creatorId or isMod:
         finalID = await interaction.client.fetch_user(user_id)
+
+        server = db.child("Guild").child(interaction.guild.id).get().val()
+
+        for key, val in server.items():
+            if key == "log_pun":
+                punishmentLogs = val
+        channel = interaction.guild.get_channel(int(punishmentLogs))
+
         await interaction.guild.kick(finalID, reason=reason)
-        await interaction.response.send_message(f'User {finalID.name} has been banned for {reason}')
+        await interaction.response.send_message(f'User {finalID.name} has been kicked for {reason}')
+
+        embed = Logs.punishment_log(1, finalID, reason, "")
+        await channel.send(embed=embed)
     else:
         await interaction.response.send_message("You do not have permission to use this command")
 
 
 @bot.slash_command(guild_ids=[serverId])
 async def mute(interaction: Interaction, user_id: str, reason: str, mute_duration: str = "12h"):
-    if interaction.user.id in creatorId:
+    caller = db.child("Users").child(interaction.user.id).get().val()
+    for key, val in caller.items():
+        if key == "mod":
+            isMod = val
+    if interaction.user.id in creatorId or isMod:
         memberList = interaction.guild.members
         time = humanfriendly.parse_timespan(mute_duration)
         finalID = await interaction.client.fetch_user(user_id)
+
+        server = db.child("Guild").child(interaction.guild.id).get().val()
+
+        for key, val in server.items():
+            if key == "log_pun":
+                punishmentLogs = val
+        channel = interaction.guild.get_channel(int(punishmentLogs))
+
         for i in memberList:
 
             if i.id == finalID.id:
                 await i.edit(timeout=nextcord.utils.utcnow() + datetime.timedelta(seconds=time))
                 await interaction.response.send_message(f'User {i.name} has been muted for {reason}. Duration {time}')
 
+                embed = Logs.punishment_log(0, finalID, reason, time)
+                await channel.send(embed=embed)
     else:
         await interaction.response.send_message("You do not have permission to use this command")
 
 
 @bot.slash_command(guild_ids=[serverId])
-async def unmute(interaction: Interaction, user_id: str):
-    if interaction.user.id in creatorId:
+async def unmute(interaction: Interaction, user_id: str, reason: str = ""):
+    caller = db.child("Users").child(interaction.user.id).get().val()
+    for key, val in caller.items():
+        if key == "mod":
+            isMod = val
+    if interaction.user.id in creatorId or isMod:
         memberList = interaction.guild.members
         finalID = await interaction.client.fetch_user(user_id)
+
+        server = db.child("Guild").child(interaction.guild.id).get().val()
+
+        for key, val in server.items():
+            if key == "log_pun":
+                punishmentLogs = val
+        channel = interaction.guild.get_channel(int(punishmentLogs))
+        
         for i in memberList:
 
             if i.id == finalID.id:
                 await i.edit(timeout=nextcord.utils.utcnow() + datetime.timedelta(seconds=1))
                 await interaction.response.send_message(f'User {i.name} has been un-muted')
+
+                embed = Logs.punishment_log(4, finalID, reason, "")
+                await channel.send(embed=embed)
     else:
         await interaction.response.send_message("You do not have permission to use this command")
 

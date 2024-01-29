@@ -449,6 +449,7 @@ async def on_message_edit(before, after):
         channel = before.guild.get_channel(messageLogs)
         msg = (before, after)
         await channel.send(embed=Logs.message_log(1, msg))
+      
 @bot.event
 async def on_member_join(member):
     if not member.bot:
@@ -464,9 +465,17 @@ async def on_member_join(member):
                                          welcomeImage, "", "")
 
         channel = member.guild.get_channel(welcomeChannel)
-        db.child("Users").child(member.id).update(
-            {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
+        users = db.child("Users").get().val()
+        new = 1
+        for id in users.items():
+            if int(id[0]) == int(member.id):
+                new = 0
+
+        if new:
+            db.child("Users").child(member.id).update(
+                {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
         await channel.send(f'{member.mention}', embed=embed)
+      
 @bot.event
 async def on_voice_state_update(member, before, after):
     if before.channel is None:

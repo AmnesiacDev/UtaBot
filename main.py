@@ -43,10 +43,6 @@ roleName = ""
 twitchPingImage = "https://media.discordapp.net/attachments/1200255898589872168/1200630104599036035/New_Project_3.png?ex=65c6e0eb&is=65b46beb&hm=dc866c53fbc9a6322847e13036bce238dd18896a4ca69535d4900cb3871e3e43&=&format=webp&quality=lossless"
 
 
-
-
-messageLogs = ""
-punishmentLogs = ""
 twitchPingsChannel = 1179968880450478130
 twitchPingRole = 1180322120853626921
 TWITCH_CHANNEL_NAME = "its_bbananabread"
@@ -106,16 +102,18 @@ async def bot_config(interaction: Interaction, message_logs: str = "",
                      punishment_logs: str = "", end_ticket_image: str = "", twitch_ping_image: str = ""):
     global creatorId
     if interaction.user.id in creatorId:
-        global endTicketImage, messageLogs, punishmentLogs, twitchPingImage
+        global endTicketImage, twitchPingImage
 
         if twitch_ping_image:
             twitchPingImage = twitch_ping_image
 
         if message_logs:
-            messageLogs = message_logs.replace("#", "").replace("<", "").replace(">", "")
+            messageLogs = int(message_logs.replace("#", "").replace("<", "").replace(">", ""))
+            db.child("Guild").child(interaction.guild.id).update({"log_mess": messageLogs})
 
         if punishment_logs:
-            punishmentLogs = punishment_logs.replace("#", "").replace("<", "").replace(">", "")
+            punishmentLogs = int(punishment_logs.replace("#", "").replace("<", "").replace(">", ""))
+            db.child("Guild").child(interaction.guild.id).update({"log_pun": punishmentLogs})
 
         if end_ticket_image:
             endTicketImage = end_ticket_image
@@ -427,27 +425,30 @@ async def on_message(msg):
                 await msg.author.add_roles(role)
         db.child("Users").child(msg.author.id).update({"exp": exp, "level": level})
 
-
 @bot.event
 async def on_message_delete(msg):
     if not msg.author.bot:
-        global messageLogs
-        for i in msg.guild.channels:
-            if i.id == int(messageLogs):
-                channel = i
+        server = db.child("Guild").child(msg.guild.id).get().val()
+        for key, val in server.items():
+            if key == "log_mess":
+                messageLogs = val
+
+        channel = msg.guild.get_channel(messageLogs)
         await channel.send(embed=Logs.message_log(0, msg))
 
 
 @bot.event
 async def on_message_edit(before, after):
     if not before.author.bot and before.content.lower() != after.content.lower():
-        global messageLogs
-        for i in before.guild.channels:
-            if i.id == int(messageLogs):
-                channel = i
+
+        server = db.child("Guild").child(before.guild.id).get().val()
+        for key, val in server.items():
+            if key == "log_mess":
+                messageLogs = val
+
+        channel = before.guild.get_channel(messageLogs)
         msg = (before, after)
         await channel.send(embed=Logs.message_log(1, msg))
-
 @bot.event
 async def on_member_join(member):
     if not member.bot:

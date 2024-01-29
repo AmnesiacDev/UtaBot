@@ -456,7 +456,7 @@ async def on_member_join(member):
                                          welcomeImage, "", "")
         channel = member.guild.get_channel(welcomeChannel)
         db.child("Users").child(member.id).update(
-            {{"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"}})
+            {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
         await channel.send(f'{member.mention}', embed=embed)
 
 @bot.event

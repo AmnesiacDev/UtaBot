@@ -555,8 +555,9 @@ async def on_member_join(member):
             db.child("Users").child(member.id).update(
                 {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
         await channel.send(f'{member.mention}', embed=embed)
-      
-@bot.event
+
+#Getting fixed
+"""@bot.event
 async def on_voice_state_update(member, before, after):
     if before.channel is None:
         print(f"user {member} joined {after.channel}")
@@ -591,5 +592,5 @@ async def on_voice_state_update(member, before, after):
 
         db.child("Users").child(member.id).update({"vexp": vexp, "vlevel": vlevel, "vTime": "now"})
         print(f"user {member} left {before.channel}")
-
+"""
 bot.run(process.getenv("TOKEN"))

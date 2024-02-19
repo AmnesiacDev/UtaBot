@@ -106,9 +106,10 @@ async def welcome_channel(interaction: Interaction, welcome_message: str, welcom
 
 @bot.slash_command()
 async def bot_config(interaction: Interaction, message_logs: str = "",
-                     punishment_logs: str = "", end_ticket_image: str = "", twitch_ping_image: str = ""):
+                     punishment_logs: str = "", end_ticket_image: str = "", twitch_ping_image: str = "",
+                     mod_role: str = "", level_channel: str = ""):
     global creatorId
-    if interaction.user.id in creatorId:
+    if interaction.user.id in creatorId or interaction.user.id == interaction.guild.owner_id:
         global endTicketImage, twitchPingImage
 
         if twitch_ping_image:
@@ -125,6 +126,14 @@ async def bot_config(interaction: Interaction, message_logs: str = "",
         if end_ticket_image:
             endTicketImage = end_ticket_image
 
+        if mod_role:
+            print(mod_role)
+            modRole = int(mod_role.replace("@", "").replace("<", "").replace(">", "").replace("&", ""))
+            db.child("Guild").child(interaction.guild.id).update({"mod_role": modRole})
+
+        if level_channel:
+            levelChannel = int(level_channel.replace("#", "").replace("<", "").replace(">", ""))
+            db.child("Guild").child(interaction.guild.id).update({"level_channel": levelChannel})
         await interaction.response.send_message("Config has been set successfully")
     else:
         await interaction.response.send_message("You do not have permission to use this command")
@@ -449,7 +458,13 @@ twitch_check.start()
 async def on_message(msg):
     await check_twitch()
     if not msg.author.bot:
-        global levelChannel, levelRole
+        global levelRole
+
+        server = db.child("Guild").child(msg.guild.id).get().val()
+        for key, val in server.items():
+            if key == "level_channel":
+                levelChannel = int(val)
+
         user = db.child("Users").child(msg.author.id).get().val()
         for key, val in user.items():
             if key == "exp":
@@ -463,12 +478,14 @@ async def on_message(msg):
         for memRole in memberRoles:
             if memRole.is_premium_subscriber():
                 exp += 1
-              
+
         nextLevel = round((4 * (level ** 3)) / 5)
         if exp >= nextLevel:
             exp = 0
             level += 1
-            await msg.guild.get_channel(levelChannel).send(f"Congratulations {msg.author.mention} You are now Level {level}")
+            #embed = EmbedCreator.createEmbed(color_class[3], )
+            await msg.guild.get_channel(levelChannel).send(
+                f"Congratulations {msg.author.mention} You are now Level {level}")
         if level == 5:
             role = msg.guild.get_role(levelRole[0])
             if msg.author.get_role(levelRole[0]) is None:

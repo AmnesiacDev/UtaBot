@@ -321,6 +321,7 @@ async def unmute(interaction: Interaction, user_id: str, reason: str = ""):
 @bot.slash_command()
 async def level(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1}), user: str = ""):
     global imgList
+    await newChecker(msg.author)
     finalUser = interaction.user.id
     if user:
         finalUser = user.replace("<", "").replace(">", "").replace("@", "")
@@ -458,6 +459,7 @@ twitch_check.start()
 async def on_message(msg):
     await check_twitch()
     if not msg.author.bot:
+        await newChecker(msg.author)
         global levelRole
 
         server = db.child("Guild").child(msg.guild.id).get().val()
@@ -576,12 +578,15 @@ async def on_member_join(member):
 
         if new:
             db.child("Users").child(member.id).update(
-                {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
+                {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now",
+                 "Guild": {member.guild.name: member.guild.id}})
         await channel.send(f'{member.mention}', embed=embed)
 
 
 @bot.event
 async def on_voice_state_update(member, before, after):
+    await newChecker(member)
+
     if before.channel is None:
         print(f"user {member} joined {after.channel}")
         now = dt.now()
@@ -601,11 +606,11 @@ async def on_voice_state_update(member, before, after):
         time_diff = current_time - joinTime
         exp = int(math.ceil(int(time_diff.total_seconds()) / 2.5))
 
-        #Server booster exp boost
+        # Server booster exp boost
         memberRoles = member.roles
         for memRole in memberRoles:
             if memRole.is_premium_subscriber():
-                exp = int(exp*2)
+                exp = int(exp * 2)
 
         nextLevel = round((4 * (vlevel ** 3)) / 5)
         if vexp + exp < nextLevel:
@@ -624,9 +629,26 @@ async def on_voice_state_update(member, before, after):
             channel = member.guild.get_channel(levelChannel)
             nextLevel = round((4 * (vlevel ** 3)) / 5)
 
-
         await channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
         db.child("Users").child(member.id).update({"vexp": vexp, "vlevel": vlevel, "vTime": "now"})
         print(f"user {member} left {before.channel}")
+
+
+async def newChecker(member):
+    # If user not yet in database add them
+    if db.child("Users").child(member.id).get().val() is None:
+        db.child("Users").child(member.id).update(
+            {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now",
+             "Guild": {member.guild.name: member.guild.id}})
+    else:
+        userGuilds = db.child("Users").child(member.id).child("Guild").get().val()
+        exists = 0
+        print(userGuilds)
+        for key, val in userGuilds.items():
+            if key == member.guild.name:
+                exists = 1
+        if not exists:
+            db.child("Users").child(member.id).child("Guild").update({member.guild.name: member.guild.id})
+
 
 bot.run(process.getenv("TOKEN"))

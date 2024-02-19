@@ -458,6 +458,12 @@ async def on_message(msg):
                 level = val
 
         exp += 1
+        #Booster exp boost
+        memberRoles = msg.author.roles
+        for memRole in memberRoles:
+            if memRole.is_premium_subscriber():
+                exp += 1
+              
         nextLevel = round((4 * (level ** 3)) / 5)
         if exp >= nextLevel:
             exp = 0
@@ -556,8 +562,8 @@ async def on_member_join(member):
                 {"exp": 0, "level": 1, "mod": 0, "vexp": 0, "vlevel": 1, "vTime": "now"})
         await channel.send(f'{member.mention}', embed=embed)
 
-#Getting fixed
-"""@bot.event
+
+@bot.event
 async def on_voice_state_update(member, before, after):
     if before.channel is None:
         print(f"user {member} joined {after.channel}")
@@ -576,21 +582,34 @@ async def on_voice_state_update(member, before, after):
                 vlevel = val
 
         time_diff = current_time - joinTime
-        exp = int(math.ceil(int(time_diff.total_seconds()) / 3))
+        exp = int(math.ceil(int(time_diff.total_seconds()) / 2.5))
 
-        nextLevel = round((4 * (vlevel ** 2.5)) / 5)
-        if vexp + exp >= nextLevel:
-            difference = nextLevel - vexp
+        #Server booster exp boost
+        memberRoles = member.roles
+        for memRole in memberRoles:
+            if memRole.is_premium_subscriber():
+                exp = int(exp*2)
+
+        nextLevel = round((4 * (vlevel ** 3)) / 5)
+        if vexp + exp < nextLevel:
+            vexp += exp
+        while vexp + exp >= nextLevel:
+            difference = abs(nextLevel - vexp)
+            print(difference)
             exp -= difference
             vexp = exp
             vlevel += 1
-            global levelChannel
-            channel = member.guild.get_channel(levelChannel)
-            await channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
-        else:
-            vexp += exp
 
+            server = db.child("Guild").child(member.guild.id).get().val()
+            for key, val in server.items():
+                if key == "level_channel":
+                    levelChannel = val
+            channel = member.guild.get_channel(levelChannel)
+            nextLevel = round((4 * (vlevel ** 3)) / 5)
+
+
+        await channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
         db.child("Users").child(member.id).update({"vexp": vexp, "vlevel": vlevel, "vTime": "now"})
         print(f"user {member} left {before.channel}")
-"""
+
 bot.run(process.getenv("TOKEN"))

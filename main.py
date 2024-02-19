@@ -321,7 +321,7 @@ async def unmute(interaction: Interaction, user_id: str, reason: str = ""):
 @bot.slash_command()
 async def level(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1}), user: str = ""):
     global imgList
-    await newChecker(msg.author)
+    await newChecker(interaction.user)
     finalUser = interaction.user.id
     if user:
         finalUser = user.replace("<", "").replace(">", "").replace("@", "")

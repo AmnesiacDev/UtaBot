@@ -615,21 +615,26 @@ async def on_voice_state_update(member, before, after):
         nextLevel = round((4 * (vlevel ** 3)) / 5)
         if vexp + exp < nextLevel:
             vexp += exp
+        isLeveled = 0
         while vexp + exp >= nextLevel:
+            isLeveled = 1
             difference = abs(nextLevel - vexp)
             print(difference)
             exp -= difference
             vexp = exp
             vlevel += 1
 
+
+            nextLevel = round((4 * (vlevel ** 3)) / 5)
+
+        if isLeveled:
             server = db.child("Guild").child(member.guild.id).get().val()
             for key, val in server.items():
                 if key == "level_channel":
                     levelChannel = val
             channel = member.guild.get_channel(levelChannel)
-            nextLevel = round((4 * (vlevel ** 3)) / 5)
 
-        await channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
+            await channel.send(f"Congratulations {member.mention} your voice Level is now {vlevel}")
         db.child("Users").child(member.id).update({"vexp": vexp, "vlevel": vlevel, "vTime": "now"})
         print(f"user {member} left {before.channel}")
 

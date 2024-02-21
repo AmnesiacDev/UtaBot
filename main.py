@@ -427,7 +427,7 @@ async def twitch_check():
         id = data["data"][0]["id"]
     except:
         print("Stream is offline")
-    global stream_id, twitchPingsChannel, TWITCH_CHANNEL_NAME, twitchPingImage
+    global stream_id, twitchPingsChannel, TWITCH_CHANNEL_NAME, twitchPingImage, serverID
 
     if data != 0 and int(id) != stream_id:
         stream_id = int(id)
@@ -648,7 +648,7 @@ async def newChecker(member):
     else:
         userGuilds = db.child("Users").child(member.id).child("Guild").get().val()
         exists = 0
-        print(userGuilds)
+        
         for key, val in userGuilds.items():
             if key == member.guild.name:
                 exists = 1

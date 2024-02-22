@@ -459,76 +459,8 @@ twitch_check.start()
 async def on_message(msg):
     await check_twitch()
     if not msg.author.bot:
-        await newChecker(msg.author)
-        global levelRole
+        await levelUps(msg)
 
-        server = db.child("Guild").child(msg.guild.id).get().val()
-        for key, val in server.items():
-            if key == "level_channel":
-                levelChannel = int(val)
-
-        user = db.child("Users").child(msg.author.id).get().val()
-        for key, val in user.items():
-            if key == "exp":
-                exp = val
-            if key == "level":
-                level = val
-
-        exp += 1
-        #Booster exp boost
-        memberRoles = msg.author.roles
-        for memRole in memberRoles:
-            if memRole.is_premium_subscriber():
-                exp += 1
-
-        nextLevel = round((4 * (level ** 3)) / 5)
-        if exp >= nextLevel:
-            exp = 0
-            level += 1
-            #embed = EmbedCreator.createEmbed(color_class[3], )
-            await msg.guild.get_channel(levelChannel).send(
-                f"Congratulations {msg.author.mention} You are now Level {level}")
-        if level == 5:
-            role = msg.guild.get_role(levelRole[0])
-            if msg.author.get_role(levelRole[0]) is None:
-                await msg.author.add_roles(role)
-        elif level == 10:
-            role = msg.guild.get_role(levelRole[1])
-            if msg.author.get_role(levelRole[1]) is None:
-                await msg.author.add_roles(role)
-        elif level == 15:
-            role = msg.guild.get_role(levelRole[2])
-            if msg.author.get_role(levelRole[2]) is None:
-                await msg.author.add_roles(role)
-        elif level == 20:
-            role = msg.guild.get_role(levelRole[3])
-            if msg.author.get_role(levelRole[3]) is None:
-                await msg.author.add_roles(role)
-        elif level == 25:
-            role = msg.guild.get_role(levelRole[4])
-            if msg.author.get_role(levelRole[4]) is None:
-                await msg.author.add_roles(role)
-        elif level == 30:
-            role = msg.guild.get_role(levelRole[5])
-            if msg.author.get_role(levelRole[5]) is None:
-                await msg.author.add_roles(role)
-        elif level == 40:
-            role = msg.guild.get_role(levelRole[6])
-            if msg.author.get_role(levelRole[6]) is None:
-                await msg.author.add_roles(role)
-        elif level == 50:
-            role = msg.guild.get_role(levelRole[7])
-            if msg.author.get_role(levelRole[7]) is None:
-                await msg.author.add_roles(role)
-        elif level == 75:
-            role = msg.guild.get_role(levelRole[8])
-            if msg.author.get_role(levelRole[8]) is None:
-                await msg.author.add_roles(role)
-        elif level == 100:
-            role = msg.guild.get_role(levelRole[9])
-            if msg.author.get_role(levelRole[9]) is None:
-                await msg.author.add_roles(role)
-        db.child("Users").child(msg.author.id).update({"exp": exp, "level": level})
 
 @bot.event
 async def on_message_delete(msg):
@@ -654,6 +586,83 @@ async def newChecker(member):
                 exists = 1
         if not exists:
             db.child("Users").child(member.id).child("Guild").update({member.guild.name: member.guild.id})
+
+async def levelUps(msg):
+    global levelRole
+
+    await newChecker(msg.author)
+
+    server = db.child("Guild").child(msg.guild.id).get().val()
+    for key, val in server.items():
+        if key == "level_channel":
+            levelChannel = int(val)
+
+    user = db.child("Users").child(msg.author.id).get().val()
+    for key, val in user.items():
+        if key == "exp":
+            exp = val
+        if key == "level":
+            level = val
+
+    exp += 1
+    # Booster exp boost
+    memberRoles = msg.author.roles
+    for memRole in memberRoles:
+        if memRole.is_premium_subscriber():
+            exp += 1
+
+    nextLevel = round((4 * (level ** 3)) / 5)
+    if exp >= nextLevel:
+        exp = 0
+        level += 1
+
+        levelImgList = db.child("Images").child("LevelImages").child(f"level {level}").get().val()
+        embed = EmbedCreator.createEmbed(color_class[3], f"Congratulations {msg.author.name}", f"You are now Level {level} in Text", levelImgList, "","")
+        await msg.guild.get_channel(levelChannel).send(msg.author.mention)
+        await msg.guild.get_channel(levelChannel).send(embed=embed,)
+
+
+    if level == 5:
+        role = msg.guild.get_role(levelRole[0])
+        if msg.author.get_role(levelRole[0]) is None:
+            await msg.author.add_roles(role)
+    elif level == 10:
+        role = msg.guild.get_role(levelRole[1])
+        if msg.author.get_role(levelRole[1]) is None:
+            await msg.author.add_roles(role)
+    elif level == 15:
+        role = msg.guild.get_role(levelRole[2])
+        if msg.author.get_role(levelRole[2]) is None:
+            await msg.author.add_roles(role)
+    elif level == 20:
+        role = msg.guild.get_role(levelRole[3])
+        if msg.author.get_role(levelRole[3]) is None:
+            await msg.author.add_roles(role)
+    elif level == 25:
+        role = msg.guild.get_role(levelRole[4])
+        if msg.author.get_role(levelRole[4]) is None:
+            await msg.author.add_roles(role)
+    elif level == 30:
+        role = msg.guild.get_role(levelRole[5])
+        if msg.author.get_role(levelRole[5]) is None:
+            await msg.author.add_roles(role)
+    elif level == 40:
+        role = msg.guild.get_role(levelRole[6])
+        if msg.author.get_role(levelRole[6]) is None:
+            await msg.author.add_roles(role)
+    elif level == 50:
+        role = msg.guild.get_role(levelRole[7])
+        if msg.author.get_role(levelRole[7]) is None:
+            await msg.author.add_roles(role)
+    elif level == 75:
+        role = msg.guild.get_role(levelRole[8])
+        if msg.author.get_role(levelRole[8]) is None:
+            await msg.author.add_roles(role)
+    elif level == 100:
+        role = msg.guild.get_role(levelRole[9])
+        if msg.author.get_role(levelRole[9]) is None:
+            await msg.author.add_roles(role)
+    db.child("Users").child(msg.author.id).update({"exp": exp, "level": level})
 
 
 bot.run(process.getenv("TOKEN"))

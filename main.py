@@ -26,13 +26,6 @@ conf = {
   "measurementId": "G-SJGQ08VR4H"
 }
 
-imgList = ["https://media.discordapp.net/attachments/1200255898589872168/1200256881126559844/0_-removebg-preview.png?ex=65c58554&is=65b31054&hm=ad6759f65dd3149070d6769e159e7256baa9a4e334c56a215fafcbe54d048b71&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256880895852595/15_-removebg-preview.png?ex=65c58554&is=65b31054&hm=09cc5e97bdab904b203f237afc8e74581676218cd938ac3ebe4e7916e441f41f&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256881856368720/30_-removebg-preview.png?ex=65c58554&is=65b31054&hm=433a1c672cdaf0e5b97a7e13ff2308b251819f6767dc2913410d5e2de9c2e5ae&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256882078650398/50_-removebg-preview.png?ex=65c58554&is=65b31054&hm=c27dd16d983c1503b10bd3674b5fe88439f5778a27b0650c3e99c865b6809d3d&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256881344647178/80_-removebg-preview.png?ex=65c58554&is=65b31054&hm=7b8267b83e37e07c787c1c88aa39f8e5185ad92a8dc05c7d149a891b76e08947&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256881608884334/90_-removebg-preview.png?ex=65c58554&is=65b31054&hm=bad235fbe8289d90ecc7697f4c73dc11772490373c78be1a2c7e3347bf729661&=&format=webp&quality=lossless",
-           "https://media.discordapp.net/attachments/1200255898589872168/1200256882317721660/97_-removebg-preview.png?ex=65c58554&is=65b31054&hm=3a2b82f6d99ec0d14a70b3bb03e87e13ae3c2afe68c6d155f644b0ba773c1549&=&format=webp&quality=lossless"]
 firebase = pyrebase.initialize_app(conf)
 db = firebase.database()
 
@@ -338,7 +331,7 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         imgToUse = int(math.floor(imgToUse / 15))
         embed = EmbedCreator.createEmbed(color_class[1], f"Stats   -   {emoji}",
                                          f"Current Level: {level}\nCurrent Experience {exp}/{nextLevel}",
-                                         imgList[imgToUse], "", "")
+                                         db.child("Images").child("ProgressBars").child(imgToUse).get().val(), "", "")
     else:
         emoji = "🔊"
         for key, val in finalUser.items():
@@ -351,7 +344,7 @@ async def level(interaction: Interaction, type: int = SlashOption(name="type", c
         imgToUse = int(math.floor(imgToUse/15))
         embed = EmbedCreator.createEmbed(color_class[1], f"Stats   -   {emoji}",
                                          f"Current Level: {vlevel}\nCurrent Experience {vexp}/{nextLevel}",
-                                         imgList[imgToUse], "", "")
+                                         db.child("Images").child("ProgressBars").child(imgToUse).get().val(), "", "")
 
     await interaction.response.send_message(embed=embed)
 
@@ -460,6 +453,12 @@ async def on_message(msg):
     await check_twitch()
     if not msg.author.bot:
         await levelUps(msg)
+
+        if msg.reference:
+            message = await msg.channel.fetch_message(msg.reference.message_id)
+            if message.author.id == bot.user.id:
+                if "thank you" in str(msg.content).lower() or "ty" in str(msg.content).lower():
+                    await message.channel.send("You're welcome")
 
 
 @bot.event

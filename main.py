@@ -448,6 +448,13 @@ async def after_slow_count():
 
 twitch_check.start()
 
+bananaDog = ["Fuck you","Nesc is better anyways, Baka yaro","I never liked you","I'm taken by Nesc",
+              "Pay Nesc, pussy", "I hate you"]
+
+nescPog = ["Love you baby","Mwah <3","You're my favorite","Can we marry"]
+
+danaPog = ["Hey Dana <3", "Nesc really likes you 👉 👈","Send Nesc thigh pics","Send Nesc pics"]
+import random
 @bot.event
 async def on_message(msg):
     await check_twitch()
@@ -457,7 +464,18 @@ async def on_message(msg):
         if msg.reference:
             message = await msg.channel.fetch_message(msg.reference.message_id)
             if message.author.id == bot.user.id:
-                if "thank you" in str(msg.content).lower() or "ty" in str(msg.content).lower():
+                            
+                if msg.author.id == 991043009070125166:
+                    cho = random.choice(nescPog)
+                    await message.channel.send(cho)
+                elif msg.author.id == 409794671418802177:
+                    cho = random.choice(bananaDog)
+                    await message.channel.send(cho)
+                elif msg.author.id == 738122343532199958:
+                    cho = random.choice(danaPog)
+                    await message.channel.send(cho)
+                    
+                elif "thank you" in str(msg.content).lower() or "ty" in str(msg.content).lower():
                     await message.channel.send("You're welcome")
 
 

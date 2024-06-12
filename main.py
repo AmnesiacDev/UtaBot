@@ -87,9 +87,9 @@ async def add_responses(interaction: Interaction, response: str):
 
         db.child("Users").child(interaction.user.id).child("CustomeResponses").update({f"{random.randint(0, 9999)}": response})
     except:
-        await interaction.response.send_message("Something went wrong, please try again")
+        await interaction.response.send_message(content="Something went wrong, please try again", ephemeral=True)
     else:
-        await interaction.response.send_message("Updated Successfully")
+        await interaction.response.send_message(content="Updated Successfully", ephemeral=True)
 
 @bot.slash_command()
 async def remove_responses(interaction: Interaction):

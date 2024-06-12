@@ -7,8 +7,9 @@ import requests
 import os as process
 import Tickets, EmbedCreator, Logs
 from nextcord.ext import tasks
-from nextcord import Intents, Color, Interaction, SlashOption, ButtonStyle
-from nextcord.ui import View, Button
+from nextcord import Intents, Color, Interaction, SlashOption, ButtonStyle, Embed, SelectOption
+from nextcord.ui import View, Button, StringSelect
+import random
 
 intents = Intents.all()
 intents.message_content = True
@@ -78,6 +79,45 @@ creatorId = [991043009070125166, 409794671418802177]
 serverId = 1086626877034221598
 levelChannel = 1200293742322655353
 modRole = 1187465633462489119
+
+
+@bot.slash_command()
+async def add_responses(interaction: Interaction, response: str):
+    try:
+
+        db.child("Users").child(interaction.user.id).child("CustomeResponses").update({f"{random.randint(0, 9999)}": response})
+    except:
+        await interaction.response.send_message("Something went wrong, please try again")
+    else:
+        await interaction.response.send_message("Updated Successfully")
+
+@bot.slash_command()
+async def remove_responses(interaction: Interaction):
+
+    res = db.child("Users").child(interaction.user.id).child("CustomeResponses").get().val()
+    print(res)
+    responseList = []
+    for key, val in res.items():
+        responseList.append(val)
+
+    selectMenu = StringSelect(min_values=1, placeholder="Select Responses to delete")
+
+    for i in range(len(res)):
+        selectMenu.append_option(SelectOption(label=f"{responseList[i]}"))
+
+    async def selectMenu_callback(interaction):
+        for key, val in res.items():
+            if val == selectMenu.values[0]:
+                db.child("Users").child(interaction.user.id).child("CustomeResponses").child(key).remove()
+
+    selectMenu.callback = selectMenu_callback
+    myView = View()
+    myView.add_item(selectMenu)
+
+    await interaction.response.send_message(
+        content=f"{interaction.user.mention} Choose the Response you wish to remove",
+        view=myView, ephemeral=True
+    )
 
 
 @bot.slash_command()
@@ -454,7 +494,7 @@ bananaDog = ["Fuck you","Nesc is better anyways, Baka yaro","I never liked you",
 nescPog = ["Love you baby","Mwah <3","You're my favorite","Can we marry"]
 
 danaPog = ["Hey Dana <3", "Nesc really likes you 👉 👈","Send Nesc thigh pics","Send Nesc pics"]
-import random
+
 @bot.event
 async def on_message(msg):
     await check_twitch()
@@ -463,20 +503,21 @@ async def on_message(msg):
 
         if msg.reference:
             message = await msg.channel.fetch_message(msg.reference.message_id)
+
+            response = db.child("Users").child(msg.author.id).child("CustomeResponses").get().val()
+            responseList = []
+            for key, val in response.items():
+                responseList.append(val)
+
             if message.author.id == bot.user.id:
-                            
-                if msg.author.id == 991043009070125166:
-                    cho = random.choice(nescPog)
+                if responseList:
+                    cho = random.choice(responseList)
                     await message.channel.send(cho)
-                elif msg.author.id == 409794671418802177:
-                    cho = random.choice(bananaDog)
-                    await message.channel.send(cho)
-                elif msg.author.id == 738122343532199958:
-                    cho = random.choice(danaPog)
-                    await message.channel.send(cho)
-                    
+
+
                 elif "thank you" in str(msg.content).lower() or "ty" in str(msg.content).lower():
                     await message.channel.send("You're welcome")
+
 
 
 @bot.event

@@ -1,4 +1,5 @@
 import datetime, pyrebase
+import time
 from datetime import datetime as dt
 import humanfriendly
 import nextcord, math
@@ -92,7 +93,6 @@ async def create_fish(interaction: Interaction, fish_name: str, fish_channel: st
                                                                             "height": 15})
 
 
-
 @bot.slash_command()
 async def update_fish(interaction: Interaction):
     guildVals = db.child("Guild").child(interaction.guild.id).get().val()
@@ -114,13 +114,13 @@ async def update_fish(interaction: Interaction):
     idleImage = "https://cdn.discordapp.com/attachments/1206538819768426496/1250575359741788160/download.gif?ex=666b7090&is=666a1f10&hm=7f0426f8fe6b7e53b760afb984825c361872a0cb547d29fb7fbc0ecf1c7d55a2&"
     idleMessage = f"{fishName} weighs {fishWeight/1000} Kgs and is {fishHeight/100} Meters long"
     idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
-
-    eatingMessage = f"{fishName} is now eating"
+    
+    eatingMessage = f"{interaction.user.display_name} dropped food and {fishName} is now eating"
     eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "", "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&", "", "")
 
     async def feedButton_callback(interaction):
         feedButton.disabled = True
-
+        name = interaction.user.display_name
         await interaction.response.edit_message(embed=eatingEmbed)
         newHeight = fishHeight + random.randint(5, 10)
         newWeight = newHeight*34
@@ -129,7 +129,7 @@ async def update_fish(interaction: Interaction):
         time.sleep(5)
 
         idleMessage = f"{fishName} weighs {newWeight / 1000} Kgs and is {newHeight / 100} Meters long"
-        idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
+        idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, f"Last fed by {name}", idleImage, "", "")
         await msg.edit(embed=idleEmbed)
 
         feedButton.disabled = False

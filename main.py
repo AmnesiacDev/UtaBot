@@ -115,12 +115,13 @@ async def update_fish(interaction: Interaction):
     idleMessage = f"{fishName} weighs {fishWeight/1000} Kgs and is {fishHeight/100} Meters long"
     idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
     
-    eatingMessage = f"{interaction.user.display_name} dropped food and {fishName} is now eating"
-    eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "", "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&", "", "")
 
     async def feedButton_callback(interaction):
         feedButton.disabled = True
         name = interaction.user.display_name
+        eatingMessage = f"{name} dropped food and {fishName} is now eating"
+        eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "", "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&", "", "")
+
         await interaction.response.edit_message(embed=eatingEmbed)
         newHeight = fishHeight + random.randint(5, 10)
         newWeight = newHeight*34

@@ -80,7 +80,71 @@ serverId = 1086626877034221598
 levelChannel = 1200293742322655353
 modRole = 1187465633462489119
 
+# Fish Minigame ##############################
+@bot.slash_command()
+async def create_fish(interaction: Interaction, fish_name: str, fish_channel: str):
+    if interaction.user.id == 991043009070125166:
+        fishCh = int(fish_channel.replace("#", "").replace("<", "").replace(">", ""))
+        db.child("Guild").child(interaction.guild.id).update({"fish_ch": fishCh})
+    
+        db.child("Guild").child(interaction.guild.id).child("Fish").update({"name": fish_name,
+                                                                            "weight": 510,
+                                                                            "height": 15})
 
+
+
+@bot.slash_command()
+async def update_fish(interaction: Interaction):
+    guildVals = db.child("Guild").child(interaction.guild.id).get().val()
+    for key, val in guildVals.items():
+        if key == "fish_ch":
+            channelId = int(val)
+
+    channel = interaction.guild.get_channel(int(channelId))
+    feedButton = Button(style=ButtonStyle.blurple, emoji="🧁")
+    fishVal = db.child("Guild").child(interaction.guild.id).child("Fish").get().val()
+    for key, val in fishVal.items():
+        if key == "name":
+            fishName = val
+        elif key == "weight":
+            fishWeight = val
+        elif key == "height":
+            fishHeight = val
+
+    idleImage = "https://cdn.discordapp.com/attachments/1206538819768426496/1250575359741788160/download.gif?ex=666b7090&is=666a1f10&hm=7f0426f8fe6b7e53b760afb984825c361872a0cb547d29fb7fbc0ecf1c7d55a2&"
+    idleMessage = f"{fishName} weighs {fishWeight/1000} Kgs and is {fishHeight/100} Meters long"
+    idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
+
+    eatingMessage = f"{fishName} is now eating"
+    eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "", "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&", "", "")
+
+    async def feedButton_callback(interaction):
+        feedButton.disabled = True
+
+        await interaction.response.edit_message(embed=eatingEmbed)
+        newHeight = fishHeight + random.randint(5, 10)
+        newWeight = newHeight*34
+        db.child("Guild").child(interaction.guild.id).child("Fish").update({"height": newHeight,
+                                                                            "weight": newWeight})
+        time.sleep(5)
+
+        idleMessage = f"{fishName} weighs {newWeight / 1000} Kgs and is {newHeight / 100} Meters long"
+        idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
+        await msg.edit(embed=idleEmbed)
+
+        feedButton.disabled = False
+
+    feedButton.callback = feedButton_callback
+    fishView = View()
+    fishView.add_item(feedButton)
+
+    msg = await channel.send(embed=idleEmbed, view=fishView)
+    await interaction.response.send_message(ephemeral=True, content="Blob")
+#################################################################
+#################################################################
+
+
+# Custome Responses #############################################
 @bot.slash_command()
 async def add_responses(interaction: Interaction, response: str):
     try:
@@ -118,6 +182,8 @@ async def remove_responses(interaction: Interaction):
         content=f"{interaction.user.mention} Choose the Response you wish to remove",
         view=myView, ephemeral=True
     )
+#################################################################
+#################################################################
 
 
 @bot.slash_command()

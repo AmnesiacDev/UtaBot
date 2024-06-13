@@ -93,6 +93,7 @@ async def create_fish(interaction: Interaction, fish_name: str, fish_channel: st
                                                                             "height": 15})
 
 
+
 @bot.slash_command()
 async def update_fish(interaction: Interaction):
     guildVals = db.child("Guild").child(interaction.guild.id).get().val()
@@ -114,26 +115,67 @@ async def update_fish(interaction: Interaction):
     idleImage = "https://cdn.discordapp.com/attachments/1206538819768426496/1250575359741788160/download.gif?ex=666b7090&is=666a1f10&hm=7f0426f8fe6b7e53b760afb984825c361872a0cb547d29fb7fbc0ecf1c7d55a2&"
     idleMessage = f"{fishName} weighs {fishWeight/1000} Kgs and is {fishHeight/100} Meters long"
     idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, "", idleImage, "", "")
-    
 
     async def feedButton_callback(interaction):
-        feedButton.disabled = True
-        name = interaction.user.display_name
-        eatingMessage = f"{name} dropped food and {fishName} is now eating"
-        eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "", "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&", "", "")
 
-        await interaction.response.edit_message(embed=eatingEmbed)
-        newHeight = fishHeight + random.randint(5, 10)
-        newWeight = newHeight*34
-        db.child("Guild").child(interaction.guild.id).child("Fish").update({"height": newHeight,
-                                                                            "weight": newWeight})
-        time.sleep(5)
+        user = db.child("Users").child(interaction.user.id).get().val()
+        print(user)
+        c = True
+        for key, val in user.items():
+            if key == "fish_size":
+                c = False
+        if c:
+            db.child("Users").child(interaction.user.id).update({"fish_size": 0.0})
 
-        idleMessage = f"{fishName} weighs {newWeight / 1000} Kgs and is {newHeight / 100} Meters long"
-        idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, f"Last fed by {name}", idleImage, "", "")
-        await msg.edit(embed=idleEmbed)
+        fishVal = db.child("Guild").child(interaction.guild.id).child("Fish").get().val()
+        for key, val in fishVal.items():
+            if key == "name":
+                fishName = val
+            elif key == "height":
+                fishHeight = val
+            elif key == "last_fed":
+                lastFed = val
 
-        feedButton.disabled = False
+        if not interaction.user.id == lastFed:
+
+            orderedFishSize = db.child("Users").order_by_child("fish_size").limit_to_last(1).get().val()
+            for key, val in orderedFishSize.items():
+                topUser = key
+
+            feedButton.disabled = True
+            name = interaction.user.display_name
+            topName = interaction.guild.get_member(int(topUser))
+            eatingMessage = f"{name} dropped food and {fishName} is now eating"
+            eatingEmbed = EmbedCreator.createEmbed(color_class[0], eatingMessage, "",
+                                                   "https://cdn.discordapp.com/attachments/1206538819768426496/1250575522665336914/download_1.gif?ex=666b70b7&is=666a1f37&hm=3b9093856d98804f6bd5cdf2b2290f590f65e55bf59648b46ac361ad330555fc&",
+                                                   "", f"{topName} helped {fishName} grow the most")
+
+            rnd = random.randint(5, 10)
+            newHeight = fishHeight + rnd
+            newWeight = newHeight*34
+
+            user = db.child("Users").child(interaction.user.id).get().val()
+            for key, val in user.items():
+                if key == "fish_size":
+                    size = val
+            print(size)
+            db.child("Users").child(interaction.user.id).update({"fish_size": size+rnd})
+            db.child("Guild").child(interaction.guild.id).child("Fish").update({"height": newHeight,
+                                                                                "weight": newWeight})
+            db.child("Guild").child(interaction.guild.id).child("Fish").update({"last_fed": interaction.user.id})
+
+            await interaction.response.edit_message(embed=eatingEmbed)
+            time.sleep(5)
+
+            idleMessage = f"{fishName} weighs {newWeight / 1000} Kgs and is {newHeight / 100} Meters long"
+            idleEmbed = EmbedCreator.createEmbed(color_class[0], idleMessage, f"Last fed by {name}", idleImage, "",
+                                                 f"{topName} helped {fishName} grow the most")
+            await msg.edit(embed=idleEmbed)
+
+            feedButton.disabled = False
+        else:
+            await interaction.response.send_message(content=f"You fed {fishName} last, let someone else feed it",
+                                                    ephemeral=True)
 
     feedButton.callback = feedButton_callback
     fishView = View()
@@ -141,6 +183,7 @@ async def update_fish(interaction: Interaction):
 
     msg = await channel.send(embed=idleEmbed, view=fishView)
     await interaction.response.send_message(ephemeral=True, content="Blob")
+
 #################################################################
 #################################################################
 
@@ -484,16 +527,20 @@ async def unmod(interaction: Interaction, user_id: str):
 
 
 @bot.slash_command()
-async def leaderboard(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1})):
-
+async def leaderboard(interaction: Interaction, type: int = SlashOption(name="type", choices={"Text": 0, "Audio": 1, "Fish": 2})):
     if type == 0:
         users = db.child("Users").order_by_child("level").limit_to_last(10).get().val()
         levelType = "level"
         emoji = "📔"
-    else:
+    elif type == 1:
         users = db.child("Users").order_by_child("vlevel").limit_to_last(10).get().val()
         levelType = "vlevel"
         emoji = "🔊"
+    elif type == 2:
+        users = db.child("Users").order_by_child("fish_size").limit_to_last(10).get().val()
+        levelType = "fish_size"
+        emoji = "🐟"
+
     stackKey = []
     for key, val in users.items():
         stackKey.append(key)
@@ -502,22 +549,24 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
     for i in range(len(stackKey)):
         userId = stackKey.pop()
         myVal = db.child("Users").child(userId).get().val()
-        v = ""
         for key, val in myVal.items():
             if key == levelType:
                 v = val
         user = await interaction.client.fetch_user(userId)
 
-        bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
+        if not type == 2:
+            bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
+        else:
+            bodyStr += f"{str(i + 1)}- {user.name} - {v/100} Meters - {(v*34)/1000} Kgs\n"
 
-    embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard   -   {emoji}", bodyStr, "", "", "")
+    embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard {emoji}", bodyStr, "", "", "")
     await interaction.response.send_message(embed=embed)
-
 
 @bot.event
 async def on_ready():
     print(f'logged in as {bot.user.name} ({bot.user.id})')
     print("....................................")
+
 
 
 @tasks.loop(minutes=5.0)
@@ -555,17 +604,20 @@ async def after_slow_count():
 
 twitch_check.start()
 
-bananaDog = ["Fuck you","Nesc is better anyways, Baka yaro","I never liked you","I'm taken by Nesc",
-              "Pay Nesc, pussy", "I hate you"]
-
-nescPog = ["Love you baby","Mwah <3","You're my favorite","Can we marry"]
-
-danaPog = ["Hey Dana <3", "Nesc really likes you 👉 👈","Send Nesc thigh pics","Send Nesc pics"]
 
 @bot.event
 async def on_message(msg):
+
     await check_twitch()
     if not msg.author.bot:
+        temp = db.child("Users").child(msg.author.id).child("Guild").get().val()
+        c = True
+        for key, val in temp.items():
+            if key == msg.author.guild.id:
+                c = False
+        if c:
+            db.child("Users").child(msg.author.id).child("Guild").update({msg.author.guild.id: {"name": msg.author.guild.name}})
+
         await levelUps(msg)
 
         if msg.reference:

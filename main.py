@@ -550,14 +550,21 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
         userId = stackKey.pop()
         myVal = db.child("Users").child(userId).get().val()
         for key, val in myVal.items():
-            if key == levelType:
+            if key == levelType and val:
                 v = val
+            if not val:
+                v = 0
         user = await interaction.client.fetch_user(userId)
 
         if not type == 2:
             bodyStr += f"{str(i + 1)}- {user.name} - Level: {v}\n"
         else:
-            bodyStr += f"{str(i + 1)}- {user.name} - {v/100} Meters - {(v*34)/1000} Kgs\n"
+            if v:
+                height = v/100
+                weight = (v*34)/1000
+            else:
+                height, weight = 0
+            bodyStr += f"{str(i + 1)}- {user.name} - {height} Meters - {weight} Kgs\n"
 
     embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard {emoji}", bodyStr, "", "", "")
     await interaction.response.send_message(embed=embed)

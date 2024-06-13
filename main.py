@@ -563,7 +563,8 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
                 height = v/100
                 weight = (v*34)/1000
             else:
-                height, weight = 0
+                height = 0 
+                weight = 0
             bodyStr += f"{str(i + 1)}- {user.name} - {height} Meters - {weight} Kgs\n"
 
     embed = EmbedCreator.createEmbed(color_class[3], f"Leaderboard {emoji}", bodyStr, "", "", "")

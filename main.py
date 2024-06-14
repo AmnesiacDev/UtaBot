@@ -178,7 +178,7 @@ async def update_fish(interaction: Interaction):
                                                     ephemeral=True)
 
     feedButton.callback = feedButton_callback
-    fishView = View()
+    fishView = View(timeout=None)
     fishView.add_item(feedButton)
 
     msg = await channel.send(embed=idleEmbed, view=fishView)

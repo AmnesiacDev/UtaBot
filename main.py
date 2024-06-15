@@ -551,9 +551,10 @@ async def leaderboard(interaction: Interaction, type: int = SlashOption(name="ty
         myVal = db.child("Users").child(userId).get().val()
         for key, val in myVal.items():
             if key == levelType and val:
-                v = val
-            if not val:
-                v = 0
+                if val:
+                    v = val
+                else:
+                    v = 0
         user = await interaction.client.fetch_user(userId)
 
         if not type == 2:
